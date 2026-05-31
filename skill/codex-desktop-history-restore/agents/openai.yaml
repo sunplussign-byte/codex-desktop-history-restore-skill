@@ -1,0 +1,4 @@
+version: 1
+display_name: Codex History Restore
+short_description: Recover Codex Desktop work with two modes: read-only handoff for fast continuation, or restore for repairing sidebar history and original-thread resume.
+default_prompt: Decide whether the user needs `handoff` or `restore`, then either continue work read-only from prior session context or repair Codex Desktop local history, sidebar projects, and full conversation rendering after provider/config migration problems.
