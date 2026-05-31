@@ -2,122 +2,109 @@
 
 [中文](./README.md) | English
 
-A recovery-oriented skill for Codex Desktop users.
+Make Codex Desktop history easier to continue and easier to recover.
 
-It helps with two common situations:
+This skill focuses on two practical problems:
 
-- you want to keep working immediately without re-explaining everything
-- you want Codex sidebar history, project roots, and original-thread resume to work again
+- you want to continue a previous task without re-explaining the whole context
+- you want Codex sidebar history, project roots, and the original thread to work again
 
-Because those are different goals, the skill has two explicit modes:
+## Where It Helps
 
-- `handoff`: continue the work quickly
-- `restore`: repair local history state
+This skill is especially useful when:
 
-## Why This Exists
+- you switch between multiple ChatGPT Plus accounts on the same Mac
+- you move from subscription mode to API mode and want to continue the same task
+- the old conversation is still on disk but no longer appears in the Codex sidebar
+- opening the original thread fails, or only the first message renders
 
-This skill is especially useful for people who:
+In many real cases, the data is not actually gone.
+The local state still exists, but Codex no longer restores it correctly in the UI.
 
-- use Codex with ChatGPT Plus
-- do not want to pay for a more expensive Pro tier
-- may rotate between 2 or 3 Plus accounts
-- start in subscription mode but want to switch to API mode without losing task continuity
+This skill separates two goals that are often mixed together:
 
-In that setup, you can easily run into problems like:
+- continuing the work
+- restoring the original thread
 
-- a new session cannot see the previous context
-- switching from subscription mode to API mode breaks continuity
-- local sidebar history appears to disappear after switching accounts
-- provider or account changes break native resume
-
-This skill does not magically make multiple accounts share the exact same live chat window.
-Instead, it helps you handle the situation in two practical ways:
-
-- use `handoff` when you mainly want to continue the work
-- use `restore` when you want the original local history and thread behavior back
-
-This also applies to subscription-to-API switching:
-
-- the skill can be used when you move from a subscription-backed session to an API-backed session
-- `handoff` is the safest path there, because it transfers working context without depending on native thread recovery
-- `restore` can also work, but only when the recovery flow respects the current `auth_mode` and chooses the correct provider target
-
-## What The Two Modes Do
+## Two Modes
 
 ### `handoff`
 
-Use this when:
+Use this when your first priority is to keep the work moving.
 
-- you want to continue the task immediately
-- you are fine continuing in a new session
-- you do not need the original sidebar thread to come back right away
+It will:
 
-What it does:
+- find the most relevant prior session
+- extract the context needed to continue
+- prepare a clear continuation prompt for the next session
 
-- identifies the most relevant prior session
-- extracts the context needed to continue
-- gives the next session a clear continuation prompt
+It will not:
 
-What it does not do:
+- modify local databases
+- change `config.toml`
+- directly restore the old sidebar thread
 
-- it does not mutate local SQLite state
-- it does not change `config.toml`
-- it does not directly restore the old sidebar thread
-
-Short version:
-`handoff` solves "how do I keep working?"
+Short version:  
+`handoff` is for continuing the work.
 
 ### `restore`
 
-Use this when:
+Use this when you explicitly want Codex local history repaired.
 
-- you explicitly want Codex sidebar history repaired
-- you want the original thread, project root, and local history behavior back
-- you accept a more careful repair flow that may require restarting Codex
+It will:
 
-What it does:
+- inspect the current `auth_mode`
+- choose the correct provider target
+- repair consistency across SQLite, rollout metadata, indexes, and global state
+- try to restore sidebar history, project roots, and the original thread
 
-- checks `auth_mode`
-- chooses the correct provider target
-- repairs consistency across SQLite, rollout metadata, index, and global UI state
-- tries to restore normal sidebar and original-thread behavior
+Short version:  
+`restore` is for repairing the original local thread state.
 
-Short version:
-`restore` solves "how do I repair Codex local history?"
+## Which One Should You Use?
 
-## When To Use Which
+- If you want to keep working right now, use `handoff`
+- If you want the original sidebar history and thread back, use `restore`
 
-- If you need to keep working now, use `handoff`
-- If you need the original sidebar history and thread back, use `restore`
+This is especially helpful in switching flows like:
 
-These goals are related, but they are not the same operation. Many broken recovery attempts happen because they get mixed together.
+- `Plus A -> Plus B`
+- `Plus -> API`
 
-## Key Principles
+In practice:
 
-- Read `auth.json` before choosing any provider strategy
-- In `chatgpt` mode, active threads should normally end up on built-in `openai`
-- Do not migrate active threads to `custom` just because a historical custom provider existed
-- Keep `handoff` read-only by default
-- Keep `restore` conservative and verifiable
-- Use minimal backups by default so local disk usage does not grow unnecessarily
-- Clean up superseded backups after a successful repair
+- `handoff` is usually the safer path for continuity
+- `restore` is the heavier path for repairing the local history system itself
+
+## Core Principles
+
+- read `auth.json` before deciding any provider strategy
+- in `chatgpt` mode, active threads should normally return to built-in `openai`
+- do not migrate active threads to `custom` just because a historical custom provider existed
+- keep `handoff` read-only by default
+- keep `restore` limited to minimal necessary backups
+- clean up superseded backups after a successful repair
 
 ## Installation
 
-Simple mental model: after installation, this repository is linked into your local Codex skill directory.
-
-The end result looks like:
+After installation, Codex will have a symlink like this on your machine:
 
 ```text
 ~/.codex/skills/codex-desktop-history-restore -> <this-repo>/skill/codex-desktop-history-restore
 ```
 
-### Option 1: Install from the terminal yourself
+Repository:
+
+```text
+https://github.com/sunplussign-byte/codex-desktop-history-restore-skill
+```
+
+### Option 1: Install from the terminal
 
 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/sunplussign-byte/codex-desktop-history-restore-skill.git
 cd codex-desktop-history-restore-skill
 ```
 
@@ -127,7 +114,7 @@ cd codex-desktop-history-restore-skill
 ./install.sh
 ```
 
-3. Optional: verify the repository structure
+3. Optional: run verification
 
 ```bash
 ./scripts/verify.sh
@@ -139,20 +126,11 @@ If you see:
 verify_ok=true
 ```
 
-the repository structure is valid.
+the structure and installation are valid.
 
 ### Option 2: Ask Codex to install it for you
 
-If you do not want to run the commands yourself, you can ask Codex to do it.
-
-But Codex still needs to know where the repository is. So you must provide either:
-
-- a GitHub repository URL
-- or a local path where the repository already exists
-
-Version A: provide a GitHub repository URL
-
-You can paste this into Codex:
+If you do not want to run the commands yourself, paste this into Codex:
 
 ```text
 Please help me install this Codex skill:
@@ -160,33 +138,42 @@ Please help me install this Codex skill:
 2. enter the repository directory
 3. run ./install.sh
 4. run ./scripts/verify.sh
-5. tell me whether the skill is correctly installed at ~/.codex/skills/codex-desktop-history-restore
-Repository URL: <your-repo-url>
+5. tell me whether ~/.codex/skills/codex-desktop-history-restore is installed correctly
+Repository URL:
+https://github.com/sunplussign-byte/codex-desktop-history-restore-skill
+Do not modify the skill contents. Only install and validate it.
 ```
 
-Version B: the repository already exists locally
+If the repository already exists locally, use this version:
 
 ```text
 Please help me install this local Codex skill:
 1. enter this directory
 2. run ./install.sh
 3. run ./scripts/verify.sh
-4. tell me whether ~/.codex/skills/codex-desktop-history-restore is correctly linked
+4. tell me whether ~/.codex/skills/codex-desktop-history-restore is correctly symlinked
 Local path: <your-local-repo-path>
 Do not modify the skill contents. Only install and validate it.
 ```
 
-If you want a safer version:
+## Usage
+
+After installation, you can say:
 
 ```text
-Please first inspect this skill repository in read-only mode, then help me install it.
-Steps:
-1. clone the repository
-2. run ./install.sh
-3. run ./scripts/verify.sh
-4. tell me whether the symlink was created successfully
-Do not modify the skill contents. Only install and validate it.
-Repository URL: <your-repo-url>
+Please use the codex-desktop-history-restore skill to help me recover this conversation.
+```
+
+Or:
+
+```text
+Please use the codex-desktop-history-restore skill in handoff mode so I can continue the previous work.
+```
+
+Or:
+
+```text
+Please use the codex-desktop-history-restore skill in restore mode so the sidebar history and original thread come back.
 ```
 
 ## Repository Layout
@@ -199,6 +186,8 @@ Repository URL: <your-repo-url>
 ├── LICENSE
 ├── VERSION
 ├── install.sh
+├── releases/
+│   └── v0.1.0.md
 ├── scripts/
 │   └── verify.sh
 └── skill/
@@ -214,14 +203,6 @@ The runtime skill is:
 skill/codex-desktop-history-restore/
 ```
 
-The outer files exist to make the project easier to:
-
-- publish on GitHub
-- install for other users
-- version and maintain
-- validate quickly
-- reuse in public writeups
-
 ## Validation
 
 Run:
@@ -230,12 +211,12 @@ Run:
 ./scripts/verify.sh
 ```
 
-The script currently checks:
+It checks:
 
-- required top-level repo files exist
-- required runtime skill files exist
-- shell scripts are syntactically valid
-- key Markdown and YAML files are in the expected locations
+- required top-level repository files
+- required runtime skill files
+- shell script syntax
+- key Markdown and YAML files in the expected locations
 
 ## License
 

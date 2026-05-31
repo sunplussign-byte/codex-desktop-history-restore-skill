@@ -2,113 +2,100 @@
 
 中文 | [English](./README.en.md)
 
-一个给 Codex Desktop 用户准备的恢复型 skill。
+让 Codex Desktop 的历史会话更容易续上。
 
-它解决两类很常见的问题：
+这个 skill 主要解决两类问题：
 
-- 我只是想马上继续之前的工作，不想从头再解释一遍上下文
-- 我想把 Codex 左侧历史、项目归属、原线程恢复正常
+- 你想立刻继续之前的工作，不想重新解释上下文
+- 你想把 Codex 左侧历史、项目归属和原线程恢复正常
 
-所以这个 skill 提供两种明确模式：
+## 适合什么场景
 
-- `handoff`：快速续工
-- `restore`：修复本地历史状态
+这个 skill 特别适合下面几种情况：
 
-## 背景
+- 你在同一台 Mac 上切换不同的 ChatGPT Plus 订阅账号
+- 你从订阅模式切到 API 模式，想继续同一个任务
+- 旧会话内容其实还在本地，但 Codex 左侧历史不显示了
+- 原线程点开后恢复失败，或者只能看到第一条消息
 
-这个 skill 特别适合下面这类用户：
+很多人遇到的真实问题不是“数据没了”，而是：
 
-- 你是 Codex 的订阅用户
-- 你用的是 ChatGPT Plus
-- 你不想直接升级到更贵的 Pro
-- 你可能会准备 2 到 3 个 Plus 账号，轮换使用
-- 你原来用订阅模式工作，但想临时切到 API 模式继续同一个任务
+- 会话还在本地
+- 但 Codex 没有正确把它恢复到界面里
 
-这时候最容易遇到的问题是：
+这个 skill 的作用，就是把“继续工作”和“恢复原线程”分开处理。
 
-- 切到另一个订阅号之后，新会话看不到旧上下文
-- 从订阅模式切到 API 模式之后，新会话接不上旧任务
-- 原来的左侧历史会话像是消失了
-- 账号切换、provider 切换之后，原线程恢复失败
-
-这个 skill 的作用不是“神奇地让所有账号天然共享同一个聊天窗口”，而是帮你把这件事拆开来处理：
-
-- 如果你只想继续工作，用 `handoff`
-- 如果你想把左侧原历史和原线程修回来，用 `restore`
-
-这里也说明一下这个场景的适用性：
-
-- 从订阅账号切到 API 模式，这个 skill 也是能用的
-- `handoff` 最稳，因为它是把上下文交给新会话继续，不依赖原线程必须立即原样恢复
-- `restore` 也能处理，但前提是修复流程必须先识别当前 `auth_mode`，再决定正确的 provider 目标
-
-## 这两个模式分别做什么
+## 两种模式
 
 ### `handoff`
 
-适合：
+适合你现在最在乎的是先把工作继续下去。
 
-- 你现在最在乎的是不要中断工作
-- 你愿意在一个新会话里继续
-- 你不要求左侧原线程立刻恢复
-
-它会做的事：
+它会：
 
 - 找到最相关的旧会话
 - 提炼出继续工作需要的上下文
 - 给新会话一段清晰的继续提示
 
-它不会做的事：
+它不会：
 
-- 不会改本地 SQLite
-- 不会改 `config.toml`
-- 不会直接把原线程变回左侧可点开的状态
+- 修改本地数据库
+- 修改 `config.toml`
+- 直接把原线程恢复到左侧栏
 
-一句话理解：
-`handoff` 解决的是“工作怎么继续”。
+一句话理解：  
+`handoff` 解决的是“先继续干活”。
 
 ### `restore`
 
-适合：
+适合你明确想把 Codex 本地历史修回来。
 
-- 你明确想把 Codex 左侧历史修回来
-- 你想恢复原线程、项目归属、侧边栏显示
-- 你接受一个更谨慎、可能需要重启 Codex 的修复流程
+它会：
 
-它会做的事：
-
-- 检查 `auth_mode`
+- 检查当前 `auth_mode`
 - 判断正确的 provider 目标
-- 修复 SQLite、rollout、索引和全局状态之间的一致性
-- 让左侧历史和原线程尽量回到正常状态
+- 修复 SQLite、rollout、索引和全局状态的一致性
+- 尽量把左侧历史、项目根和原线程恢复正常
 
-一句话理解：
-`restore` 解决的是“Codex 本地历史系统怎么修好”。
+一句话理解：  
+`restore` 解决的是“把原会话修回来”。
 
-## 什么时候该用哪一个
+## 什么时候用哪一个
 
-- 你现在就要继续干活：用 `handoff`
-- 你要把左侧历史和原线程修回来：用 `restore`
+- 想马上继续之前的工作：用 `handoff`
+- 想把左侧历史和原线程恢复回来：用 `restore`
 
-这两个目标相关，但不是同一个操作。很多恢复失败，恰恰是因为把“继续工作”和“恢复原线程”混在一起做了。
+尤其是下面这两种切换场景，这个 skill 很有用：
 
-## 这个 skill 的几个关键原则
+- `Plus A -> Plus B`
+- `Plus -> API`
+
+其中：
+
+- `handoff` 更稳，适合先保住工作连续性
+- `restore` 更重，适合修本地历史系统本身
+
+## 这个 skill 的关键原则
 
 - 先看 `auth.json`，再决定 provider 策略
 - `chatgpt` 模式下，活跃线程通常应该回到内置 `openai`
 - 不能因为历史上有过 `custom`，就默认把当前活跃线程迁到 `custom`
-- `handoff` 默认保持只读
-- `restore` 默认只做最小必要备份，避免把磁盘越占越大
-- 修复成功后，应该清理已经被覆盖的冗余备份
+- `handoff` 默认只读
+- `restore` 只做最小必要备份，避免磁盘越占越大
+- 修复成功后，应清理已被覆盖的冗余备份
 
-## 安装方式
+## 安装
 
-给小白最简单的理解：安装完成后，这个仓库会被链接到你本机的 Codex skill 目录里。
-
-最终效果是：
+安装完成后，Codex 会在本机 skill 目录里建立一个软链接：
 
 ```text
 ~/.codex/skills/codex-desktop-history-restore -> <this-repo>/skill/codex-desktop-history-restore
+```
+
+仓库地址：
+
+```text
+https://github.com/sunplussign-byte/codex-desktop-history-restore-skill
 ```
 
 ### 方式一：自己在终端安装
@@ -116,17 +103,17 @@
 1. 克隆仓库
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/sunplussign-byte/codex-desktop-history-restore-skill.git
 cd codex-desktop-history-restore-skill
 ```
 
-2. 执行安装脚本
+2. 运行安装脚本
 
 ```bash
 ./install.sh
 ```
 
-3. 可选：跑一次校验
+3. 可选：运行校验
 
 ```bash
 ./scripts/verify.sh
@@ -138,34 +125,25 @@ cd codex-desktop-history-restore-skill
 verify_ok=true
 ```
 
-说明仓库结构是完整的。
+说明结构和安装结果都正常。
 
-### 方式二：直接发提示词给 Codex，让它帮你安装
+### 方式二：直接让 Codex 帮你安装
 
-如果你不想自己敲命令，也可以让 Codex 帮你安装。
-
-但要注意：你必须告诉 Codex 仓库在哪里，否则它不知道要装哪个 skill。
-
-你可以给它两种信息：
-
-- GitHub 仓库 URL
-- 或者你已经 clone 到本地的仓库路径
-
-版本 A：你提供 GitHub 仓库 URL
-
-如果你不想自己敲命令，可以把下面这段话直接发给 Codex：
+如果你不想自己执行命令，可以把下面这段话直接发给 Codex：
 
 ```text
 请帮我安装这个 Codex skill：
 1. clone 这个 GitHub 仓库到本地
 2. 进入仓库目录
 3. 运行 ./install.sh
-4. 再运行 ./scripts/verify.sh
-5. 最后告诉我 skill 是否已经正确安装到 ~/.codex/skills/codex-desktop-history-restore
-仓库地址是：<your-repo-url>
+4. 运行 ./scripts/verify.sh
+5. 告诉我 ~/.codex/skills/codex-desktop-history-restore 是否已经正确安装
+仓库地址是：
+https://github.com/sunplussign-byte/codex-desktop-history-restore-skill
+不要修改 skill 内容，只做安装和验证。
 ```
 
-版本 B：仓库已经在本地
+如果仓库已经在本地，可以发这个版本：
 
 ```text
 请帮我安装这个本地 Codex skill：
@@ -177,17 +155,24 @@ verify_ok=true
 不要修改 skill 内容，只做安装和验证。
 ```
 
-如果你还想更保险一点，可以发这个版本：
+## 使用方式
+
+安装后，你可以直接对 Codex 说：
 
 ```text
-请你先只读检查这个 skill 仓库的结构，再帮我安装。
-安装步骤：
-1. clone 仓库
-2. 运行 ./install.sh
-3. 运行 ./scripts/verify.sh
-4. 告诉我最终软链接是否已经建立成功
-不要改这个 skill 的内容，只做安装和验证。
-仓库地址：<your-repo-url>
+请用 codex-desktop-history-restore skill 帮我恢复这条会话。
+```
+
+或者：
+
+```text
+请用 codex-desktop-history-restore skill，先用 handoff 模式帮我继续之前的工作。
+```
+
+或者：
+
+```text
+请用 codex-desktop-history-restore skill，用 restore 模式帮我把左侧历史和原线程修回来。
 ```
 
 ## 仓库结构
@@ -200,6 +185,8 @@ verify_ok=true
 ├── LICENSE
 ├── VERSION
 ├── install.sh
+├── releases/
+│   └── v0.1.0.md
 ├── scripts/
 │   └── verify.sh
 └── skill/
@@ -209,19 +196,11 @@ verify_ok=true
         └── references/operator-playbook.md
 ```
 
-真正运行时会安装的是：
+真正运行时会被安装的是：
 
 ```text
 skill/codex-desktop-history-restore/
 ```
-
-外层这些文件是为了方便：
-
-- 放 GitHub
-- 给别人安装
-- 做版本管理
-- 做基础校验
-- 方便后续写分享文章
 
 ## 校验
 
@@ -231,7 +210,7 @@ skill/codex-desktop-history-restore/
 ./scripts/verify.sh
 ```
 
-这个脚本目前会检查：
+它会检查：
 
 - 仓库外层文件是否齐全
 - skill 运行时文件是否齐全
