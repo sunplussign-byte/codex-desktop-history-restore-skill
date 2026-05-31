@@ -1,6 +1,6 @@
 # Codex Desktop History Restore Skill
 
-[中文](./README.zh-CN.md) | [English](./README.en.md)
+[中文](./README.md) | English
 
 A recovery-oriented skill for Codex Desktop users.
 
@@ -194,7 +194,6 @@ Repository URL: <your-repo-url>
 ```text
 .
 ├── README.md
-├── README.zh-CN.md
 ├── README.en.md
 ├── CHANGELOG.md
 ├── LICENSE
